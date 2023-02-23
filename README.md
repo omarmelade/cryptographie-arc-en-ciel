@@ -60,3 +60,11 @@ Le paramètre `t` sert à éviter les collisions dans la table arc en ciel 🌈.
 ./build/main.out -s 5 -A 26 test ct 100 200
 ./build/main.out -s 5 -A 26 test ct-rand 100 200
 ```
+
+### Question 9
+
+Écriture de la fonction `sauve_table` et `ouvre_table`.
+```
+./build/main.out -s 3 -A 26 test ct 200 200 save arc.txt
+./build/main.out -s 5 -A 26 test ct-load arc.txt (don't work)
+```

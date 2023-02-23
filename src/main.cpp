@@ -5,13 +5,13 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <map>
 
 #include <getopt.h>
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 
 #include "utility.h"
+#include "table.h"
 
 namespace AEC {
 
@@ -19,43 +19,6 @@ void help() {
     std::cout << "Mauvaise commande : se référer au readme." << std::endl;
 }
 
-std::map<int64_t, int64_t> create_table_test(Config &CFG, int largeur, int hauteur) {
-    std::map<int64_t, int64_t> table;
-    for (int i = 0; i < hauteur; ++i) {
-        int64_t chaineX = Utility::nouvelle_chaine(CFG, i, largeur);
-        table[chaineX] = i;
-    }
-    return table;
-}
-
-std::map<int64_t, int64_t> create_table(Config &CFG, int largeur, int hauteur) {
-    std::map<int64_t, int64_t> table;
-    for (int i = 0; i < hauteur; ++i) {
-        int64_t idx = Utility::index_aleatoire() % CFG.getN();
-        int64_t chaineX = Utility::nouvelle_chaine(CFG, idx, largeur);
-        table[chaineX] = idx;
-    }
-    return table;
-}
-/*
-void sauve_table(Config &CFG, std::map<int64_t, int64_t> &table, const char *filename)
-{
-// write header in file (largeur, hauteur, alphabet, taille_min, taille_max)
-FILE *f = fopen(filename, "wb", 0);
-fprintf(f, "%d %d %s %d %d", CFG.getLargeur(), CFG.getHauteur(), CFG.getAlphabet().c_str(), CFG.getTailleMin(), CFG.getTailleMax());
-// write all map elements in bytes
-for (auto it = table.begin(); it != table.end(); ++it) {
-    fwrite(&it->first, sizeof(int64_t), 1, f);
-    fwrite(&it->second, sizeof(int64_t), 1, f);
-}
-fclose(f);
-}
-
-void ouvre_table()
-{
-
-}
-*/
 int main_test(Config &CFG, int argc, char *argv[]) {
     std::cout << std::endl;
     if (0 == strcmp(argv[0], "hash")) {
@@ -113,9 +76,18 @@ int main_test(Config &CFG, int argc, char *argv[]) {
         }
         int64_t hauteur = atoll(argv[1]);
         int64_t largeur = atoll(argv[2]);
-        auto tablearc = create_table_test(CFG, largeur, hauteur);
-        for (auto &t: tablearc) {
+        Table tablearc(CFG, largeur, hauteur, true);
+        for (auto &t: tablearc.getTable()) {
             std::cout << t.second << " --> " << t.first << std::endl;
+        }
+        if (argc == 5 && 0 == strcmp(argv[3], "save")) {
+            std::string filename = argv[4];
+            if (tablearc.sauve_table(filename)) {
+                std::cout << "Table sauvegardée dans " << filename << std::endl;
+            } else {
+                std::cout << "Erreur lors de la sauvegarde de la table dans " << filename << std::endl;
+                return 2;
+            }
         }
     } else if (0 == strcmp(argv[0], "ct-rand")) {
         if (argc < 3) {
@@ -124,8 +96,25 @@ int main_test(Config &CFG, int argc, char *argv[]) {
         }
         int64_t hauteur = atoll(argv[1]);
         int64_t largeur = atoll(argv[2]);
-        auto tablearc = create_table(CFG, largeur, hauteur);
-        for (auto &t: tablearc) {
+        Table tablearc(CFG, largeur, hauteur);
+        for (auto &t: tablearc.getTable()) {
+            std::cout << t.second << " --> " << t.first << std::endl;
+        }
+    } else if (0 == strcmp(argv[0], "ct-load")) {
+        if (argc < 2) {
+            help();
+            return 0;
+        }
+        std::string filename = argv[1];
+        Table tablearc(CFG);
+        if (tablearc.ouvre_table(filename)) {
+            std::cout << "Table chargée depuis " << filename << std::endl;
+        } else {
+            std::cout << "Erreur lors du chargement de la table depuis " << filename << std::endl;
+            return 2;
+        }
+
+        for (auto &t: tablearc.getTable()) {
             std::cout << t.second << " --> " << t.first << std::endl;
         }
     } else if (0 == strcmp(argv[0], "rand")) {
