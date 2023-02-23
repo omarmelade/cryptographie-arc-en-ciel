@@ -1,5 +1,4 @@
-- KHIAL Omar
-- LAFFONT Léo
+> KHIAL Omar & LAFFONT Léo
 
 # TP1 Cryptologie
 
