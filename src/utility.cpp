@@ -6,7 +6,10 @@
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 
+
 namespace AEC {
+
+const std::unordered_map<std::string, std::function<void(const char *, AEC::byte *)>> hashFunctionMap;
 
 std::string Utility::empreinteToString(byte *empreinte)
 {
@@ -16,54 +19,54 @@ std::string Utility::empreinteToString(byte *empreinte)
     return ss.str();
 }
 
-std::string Utility::i2c(Config &CFG, int64_t index)
+std::string Utility::i2c(Config &CFG, uint64_t index)
 {
     std::string clearText;
     int wordSize = 0;
-    int64_t euclideanRemainder = index;
+    uint64_t euclideanRemainder = index;
     auto T = CFG.getAllClearText();
-    int64_t borne = (int64_t) T[wordSize];
+    uint64_t borne = (uint64_t) T[wordSize];
 
     while (euclideanRemainder >= borne) {
         euclideanRemainder -= borne;
-        borne = (int64_t) T[++wordSize];
+        borne = (uint64_t) T[++wordSize];
     }
 
     wordSize += CFG.getTailleMin();
     for (int i = 0; i < wordSize; ++i) {
         int letterIndex = euclideanRemainder % CFG.getAlphabet().size();
-        euclideanRemainder = (int64_t) euclideanRemainder / CFG.getAlphabet().size();
+        euclideanRemainder = (uint64_t) euclideanRemainder / CFG.getAlphabet().size();
         clearText = CFG.getAlphabet().at(letterIndex) + clearText;
     }
     return clearText;
 }
 
-int64_t Utility::h2i(Config &CFG, byte* empreinte, int t)
+uint64_t Utility::h2i(Config &CFG, byte* empreinte, int t)
 {
     uint64_t* ptr = (uint64_t*) empreinte;
     uint64_t y = ptr[0];
     return (y + t) % CFG.getN();
 }
 
-int64_t Utility::i2i(Config &CFG, int64_t index, int t)
+uint64_t Utility::i2i(Config &CFG, uint64_t index, int t)
 {
     byte *empreinte = (byte *) malloc(sizeof(byte) * MD5_DIGEST_LENGTH);
     CFG.hash(i2c(CFG, index).c_str(), empreinte);
     return h2i(CFG, empreinte, t);
 }
 
-int64_t Utility::nouvelle_chaine(Config &CFG, int64_t idx1, int largeur)
+uint64_t Utility::nouvelle_chaine(Config &CFG, uint64_t idx1, int largeur)
 {
-    int64_t curIdx = idx1;
+    uint64_t curIdx = idx1;
     for (int i = 1; i < largeur; ++i) {
         curIdx = i2i(CFG,curIdx, i);
     }
     return curIdx;
 }
 
-int64_t Utility::index_aleatoire()
+uint64_t Utility::index_aleatoire()
 {
-    int64_t randRes = rand();
+    uint64_t randRes = rand();
     randRes = randRes<<32;
     randRes += rand();
     return randRes;

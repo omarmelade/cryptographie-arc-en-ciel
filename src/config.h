@@ -11,15 +11,18 @@ typedef unsigned char byte;
 class Config {
 
 public:
-    Config(std::pair<std::string, std::function<void(const char *, byte *)>> hashFunc, std::string &codeAlphabet, int tailleMin, int tailleMax);
+    Config(std::string hashFuncName, std::function<void(const char *, byte *)> hashFunc, std::string &codeAlphabet, int tailleMin, int tailleMax);
     Config();
 
-    int64_t totalClearText();
+    uint64_t totalClearText();
     byte *hash(const char *data, byte *empreinte);
     void algoToMethod(std::string algoCode);
 
-    inline int64_t getN() const { return _totalN; }
+    void initAlphabet();
+    void updateConfig();
 
+    inline uint64_t getN() const { return _totalN; }
+    inline void setN(uint64_t N) { _totalN = N; }
     inline const std::string &getCodeAlphabet() const { return _codeAlphabet; }
     inline void setCodeAlphabet(const std::string &codeAlphabet) { _codeAlphabet = codeAlphabet; }
     inline int getTailleMin() const { return _tailleMin; }
@@ -28,20 +31,21 @@ public:
     inline void setTailleMax(int tailleMax) { _tailleMax = tailleMax; }
     inline const std::string &getAlphabet() const { return _alphabet; }
     inline void setAlphabet(const std::string &alphabet) { _alphabet = alphabet; }
-    inline const std::vector<int64_t> &getAllClearText() const { return _allClearText; }
-
-    std::string getHashFunctionName();
+    inline const std::vector<uint64_t> &getAllClearText() const { return _allClearText; }
+    inline std::string getHashFunctionName() { return _hashFuncName; }
+    inline void setHashFunctionName(std::string &funcName) { _hashFuncName = funcName; }
+    inline void setHashFunction (std::function<void(const char *, byte *)> hashFunc) { _hashFunc = hashFunc; }
 
 private:
     std::string _codeAlphabet;
     int _tailleMin;
     int _tailleMax;
-    int64_t _totalN;
-    std::vector<int64_t> _allClearText;
+    uint64_t _totalN;
+    std::vector<uint64_t> _allClearText;
 
-    void initAlphabet();
 
     std::string _alphabet;
-    std::pair<std::string, std::function<void(const char *, byte *)>> _hashFunc;
+    std::string _hashFuncName;
+    std::function<void(const char *, byte *)> _hashFunc;
 };
 }

@@ -1,10 +1,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 
 #include <getopt.h>
 #include <openssl/md5.h>
@@ -35,14 +33,14 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             return 0;
         }
         for (int i = 1; i < argc; ++i) {
-            if (atoll(argv[i]) >= CFG.getN()) {
+            if (std::strtoull(argv[i], nullptr, 0) >= CFG.getN()) {
                 std::cout << "i2c(" << argv[i] << ")"
                           << " = "
                           << "OUT OF BOUNDS" << std::endl;
                 continue;
             }
             std::cout << "i2c(" << argv[i] << ")"
-                      << " = " << Utility::i2c(CFG, atoll(argv[i])) << std::endl;
+                      << " = " << Utility::i2c(CFG, strtoull(argv[i], nullptr, 0)) << std::endl;
         }
     } else if (0 == strcmp(argv[0], "h2i")) {
         if (argc < 2) {
@@ -64,7 +62,7 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             help();
             return 0;
         }
-        int64_t idx1 = atoll(argv[1]);
+        uint64_t idx1 = std::strtoull(argv[1], nullptr, 0);
         for (int i = 2; i < argc; ++i) {
             int largeur = atoi(argv[i]);
             std::cout << "chaine de taille " << largeur << " : " << idx1 << " ... " <<  Utility::nouvelle_chaine(CFG, idx1, largeur) << std::endl;
@@ -74,12 +72,10 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             help();
             return 0;
         }
-        int64_t hauteur = atoll(argv[1]);
-        int64_t largeur = atoll(argv[2]);
+        uint64_t hauteur = std::strtoull(argv[1], nullptr, 0);
+        uint64_t largeur = std::strtoull(argv[2], nullptr, 0);
         Table tablearc(CFG, largeur, hauteur, true);
-        for (auto &t: tablearc.getTable()) {
-            std::cout << t.second << " --> " << t.first << std::endl;
-        }
+        tablearc.affiche_table();
         if (argc == 5 && 0 == strcmp(argv[3], "save")) {
             std::string filename = argv[4];
             if (tablearc.sauve_table(filename)) {
@@ -94,12 +90,10 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             help();
             return 0;
         }
-        int64_t hauteur = atoll(argv[1]);
-        int64_t largeur = atoll(argv[2]);
+        uint64_t hauteur = std::strtoull(argv[1], nullptr, 0);
+        uint64_t largeur = std::strtoull(argv[2], nullptr, 0);
         Table tablearc(CFG, largeur, hauteur);
-        for (auto &t: tablearc.getTable()) {
-            std::cout << t.second << " --> " << t.first << std::endl;
-        }
+        tablearc.affiche_table();
     } else if (0 == strcmp(argv[0], "ct-load")) {
         if (argc < 2) {
             help();
@@ -113,10 +107,7 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             std::cout << "Erreur lors du chargement de la table depuis " << filename << std::endl;
             return 2;
         }
-
-        for (auto &t: tablearc.getTable()) {
-            std::cout << t.second << " --> " << t.first << std::endl;
-        }
+        tablearc.affiche_table();
     } else if (0 == strcmp(argv[0], "rand")) {
         if (argc < 2) {
             help();
@@ -150,7 +141,7 @@ int main(int argc, char *argv[])
             {"max-size", required_argument, 0, 'M'},
             {0, 0, 0, 0}};
 
-    std::pair<std::string, std::function<void(const char *, AEC::byte *)>> hashFunc("md5", &AEC::Utility::hash_MD5);
+    auto hashFunc = AEC::Utility::hashFunctionMap.find("md5");
     std::string alphabetCode = "26";
     int minSize = 1;
     int maxSize = 4;
@@ -161,9 +152,9 @@ int main(int argc, char *argv[])
         switch (opt) {
             case 0:
                 if (0 == strcmp("md5", long_options[long_index].name)) {
-                    hashFunc = {"md5", &AEC::Utility::hash_MD5};
+                    hashFunc = AEC::Utility::hashFunctionMap.find("md5");
                 } else if (0 == strcmp("sha1", long_options[long_index].name)) {
-                    hashFunc = {"sha1", &AEC::Utility::hash_SHA1};
+                    hashFunc = AEC::Utility::hashFunctionMap.find("sha1");
                 } else {
                     std::cout << "Unknown option..." << std::endl;
                     return 1;
@@ -189,7 +180,7 @@ int main(int argc, char *argv[])
     }
 
     // Init configuration
-    auto CFG = AEC::Config(hashFunc, alphabetCode, minSize, maxSize);
+    auto CFG = AEC::Config(hashFunc->first, hashFunc->second, alphabetCode, minSize, maxSize);
 
     // Print config
     std::cout << "fonction de hash = " << CFG.getHashFunctionName() << std::endl;

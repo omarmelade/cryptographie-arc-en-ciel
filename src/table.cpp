@@ -27,8 +27,8 @@ void Table::create_table_test()
 {
     _table.clear();
     for (int i = 0; i < _hauteur; ++i) {
-        int64_t chaineX = Utility::nouvelle_chaine(_CFG, i, _largeur);
-        _table[chaineX] = i;
+        uint64_t chaineX = Utility::nouvelle_chaine(_CFG, i, _largeur);
+        _table[chaineX].push_back(i);
     }
 }
 
@@ -36,25 +36,30 @@ void Table::create_table()
 {
     _table.clear();
     for (int i = 0; i < _hauteur; ++i) {
-        int64_t idx = Utility::index_aleatoire() % _CFG.getN();
-        int64_t chaineX = Utility::nouvelle_chaine(_CFG, idx, _largeur);
-        _table[chaineX] = idx;
+        uint64_t idx = Utility::index_aleatoire() % _CFG.getN();
+        uint64_t chaineX = Utility::nouvelle_chaine(_CFG, idx, _largeur);
+        _table[chaineX].push_back(i);
     }
 }
 
 // TODO: use ifstream filename instead of FILE *f
 bool Table::sauve_table(std::string filename)
 {
+    std::ofstream f;
+    f.open (filename, std::ios::out | std::ios::binary);
     // write header in file (largeur, hauteur, alphabet, taille_min, taille_max)
-    FILE *f = fopen(filename.c_str(), "wb");
-    fprintf(f, "%d %d %s %d %d\n", _largeur, _hauteur, _CFG.getCodeAlphabet().c_str(), _CFG.getTailleMin(), _CFG.getTailleMax());
+    f << _largeur << " " << _hauteur << " " << _CFG.getHashFunctionName() << " " << _CFG.getAlphabet() << " " << _CFG.getCodeAlphabet() << " " << _CFG.getTailleMin() << " " << _CFG.getTailleMax() << " " << _CFG.getN() << std::endl;
     // write all map elements in bytes
     for (auto it = _table.begin(); it != _table.end(); ++it) {
-        fwrite(&it->first, sizeof(int64_t), 1, f);
-        fwrite(&it->second, sizeof(int64_t), 1, f);
+        f.write((char *)&it->first, sizeof(uint64_t));
+        size_t size = it->second.size();
+        f.write((char *)&size, sizeof(size_t));
+        for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+            uint64_t element = *it2;
+            f.write((char *)&element, sizeof(uint64_t));
+        }
     }
-    fclose(f);
-
+    f.close();
     return true;
 }
 
@@ -62,40 +67,62 @@ bool Table::sauve_table(std::string filename)
 bool Table::ouvre_table(std::string filename)
 {
     // read header in file (largeur, hauteur, alphabet, taille_min, taille_max)
-    FILE *f = fopen(filename.c_str(), "rb");
-    int largeur, hauteur, taille_min, taille_max;
-    char *alphabet = new char[100];
-    size_t res = fscanf(f, "%d %d %s %d %d\n", &largeur, &hauteur, alphabet, &taille_min, &taille_max);
-    std::cout << "genial" << std::endl;
-    if (!res) {
-        fclose(f);
-        return false;
-    }
-    _CFG.setTailleMin(taille_min);
-    _CFG.setTailleMax(taille_max);
-    std::string alphabet_str(alphabet);
-    _CFG.setCodeAlphabet(alphabet_str);
-    _largeur = largeur;
-    _hauteur = hauteur;
+    std::ifstream f;
+    f.open(filename, std::ios::in | std::ios::binary);
+    int largeur, hauteur, tailleMin, tailleMax;
+    uint16_t n;
+    std::string header, alphabet, alphabetCode, hashName;
+    getline(f, header, '\n');
+    std::stringstream ss(header);
+    ss >> largeur >> hauteur >> hashName >> alphabet >> alphabetCode >> tailleMin >> tailleMax >> n;
 
+    auto itFunc = Utility::hashFunctionMap.find(hashName);
+    if (itFunc == Utility::hashFunctionMap.end()) { return false; }
+
+    _CFG.setCodeAlphabet(alphabetCode);
+    _CFG.setTailleMin(tailleMin);
+    _CFG.setTailleMax(tailleMax);
+    _CFG.setHashFunctionName(hashName);
+    _CFG.setHashFunction(itFunc->second);
+    _CFG.updateConfig();
+    _hauteur = hauteur;
+    _largeur = largeur;
     // read all map elements in bytes
     _table.clear();
     for (int i = 0; i < _hauteur; ++i) {
-        int64_t chaineX, idx;
-        if (!fread(&chaineX, sizeof(int64_t), 1, f)) {
-            fclose(f);
-            return false;
-        }
-        if (!fread(&idx, sizeof(int64_t), 1, f)) {
-            fclose(f);
-            return false;
+        std::vector<uint64_t> idx;
+        uint64_t chaineX;
+        size_t size;
+        f.read((char *)&chaineX, sizeof(uint64_t));
+        f.read((char *)&size, sizeof(size_t));
+        for (size_t j = 0; j < size; ++j) {
+            uint64_t tmp;
+            f.read((char *)&tmp, sizeof(uint64_t));
+            idx.push_back(tmp);
         }
         _table[chaineX] = idx;
     }
-    fclose(f);
-
+    f.close();
     return true;
 }
 
+void Table::affiche_table()
+{
+    int truncatedSize = _hauteur / 10;
+    int i = 0;
+    for (auto it = _table.begin(); it != _table.end(); ++it) {
+        if (i < truncatedSize || i > _hauteur - truncatedSize) {
+            std::cout << it->first << " --> ";
+            for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+                std::cout << *it2 << " ";
+            }
+            std::cout << std::endl;
+        }
+        else if (i == truncatedSize) {
+            std::cout << " ... " << std::endl;
+        }
+        ++i;
+    }
+}
 
 }
