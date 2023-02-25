@@ -15,11 +15,13 @@ public:
 
     inline int getLargeur() const { return _largeur; }
     inline int getHauteur() const { return _hauteur; }
+    inline Config &getConfig() { return _CFG; }
     inline std::map<uint64_t, std::vector<uint64_t>> &getTable() { return _table; }
 
     bool sauve_table(std::string filename);
     bool ouvre_table(std::string filename);
     void affiche_table();
+
 
 private:
     Config _CFG;

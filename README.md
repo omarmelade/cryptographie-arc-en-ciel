@@ -68,3 +68,8 @@ Le paramètre `t` sert à éviter les collisions dans la table arc en ciel 🌈.
 ./build/main.out -s 3 -A 26 test ct 100 200 save arc.txt
 ./build/main.out -s 5 -A 26 test ct-load arc.txt
 ```
+
+### Question 10
+
+Recherche trouve mais ne renvoie pas les indices 
+Inverse ne fonctionne pas du tout

@@ -117,6 +117,30 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             std::cout << Utility::index_aleatoire() << std::endl;
         }
     }
+    else if (0 == strcmp(argv[0], "search")) {
+
+        if (argc < 2) {
+            help();
+            return 0;
+        }
+
+        std::string filename = argv[1];
+        byte *empreinte;
+        char *data = argv[2];
+        empreinte = (byte *) malloc(sizeof(byte) * MD5_DIGEST_LENGTH);
+        CFG.hash(data, empreinte);
+
+        Table tablearc(CFG);
+        if (tablearc.ouvre_table(filename)) {
+            std::cout << "Table chargée depuis " << filename << std::endl;
+        } else {
+            std::cout << "Erreur lors du chargement de la table depuis " << filename << std::endl;
+            return 2;
+        }
+        tablearc.affiche_table();
+        std::string cleartxt;
+        Utility::inverse(tablearc.getConfig(), tablearc.getTable(), tablearc.getLargeur(),  tablearc.getHauteur(), empreinte, cleartxt);
+    }
     return 0;
 }
 
