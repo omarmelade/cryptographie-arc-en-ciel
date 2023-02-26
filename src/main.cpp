@@ -94,6 +94,15 @@ int main_test(Config &CFG, int argc, char *argv[]) {
         uint64_t largeur = std::strtoull(argv[2], nullptr, 0);
         Table tablearc(CFG, largeur, hauteur);
         tablearc.affiche_table();
+        if (argc == 5 && 0 == strcmp(argv[3], "save")) {
+            std::string filename = argv[4];
+            if (tablearc.sauve_table(filename)) {
+                std::cout << "Table sauvegardée dans " << filename << std::endl;
+            } else {
+                std::cout << "Erreur lors de la sauvegarde de la table dans " << filename << std::endl;
+                return 2;
+            }
+        }
     } else if (0 == strcmp(argv[0], "ct-load")) {
         if (argc < 2) {
             help();
@@ -108,6 +117,7 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             return 2;
         }
         tablearc.affiche_table();
+        tablearc.affiche_couverture();
     } else if (0 == strcmp(argv[0], "rand")) {
         if (argc < 2) {
             help();
@@ -138,6 +148,7 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             return 2;
         }
         tablearc.affiche_table();
+        tablearc.affiche_couverture();
         std::string cleartxt;
         Utility::inverse(tablearc.getConfig(), tablearc.getTable(), tablearc.getLargeur(),  tablearc.getHauteur(), empreinte, cleartxt);
     }
