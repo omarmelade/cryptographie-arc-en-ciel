@@ -75,7 +75,7 @@ uint64_t Utility::index_aleatoire()
 
 int Utility::recherche(std::map<uint64_t, std::vector<uint64_t>> &table, uint64_t idx, int &a, int &b) 
 {
-    std::cout idx;
+    std::cout << idx << std::endl;
     auto it = table.find(251367);
     if (it == table.end()) {
         return 0;
@@ -109,6 +109,8 @@ int Utility::inverse(Config &CFG, std::map<uint64_t, std::vector<uint64_t>> &tab
     return 1;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void Utility::hash_MD5(const char *s, byte *empreinte)
 {
     MD5((unsigned char *) s, strlen(s), empreinte);

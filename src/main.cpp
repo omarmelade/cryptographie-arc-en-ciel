@@ -117,7 +117,6 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             return 2;
         }
         tablearc.affiche_table();
-        tablearc.affiche_couverture();
     } else if (0 == strcmp(argv[0], "rand")) {
         if (argc < 2) {
             help();
@@ -148,7 +147,6 @@ int main_test(Config &CFG, int argc, char *argv[]) {
             return 2;
         }
         tablearc.affiche_table();
-        tablearc.affiche_couverture();
         std::string cleartxt;
         Utility::inverse(tablearc.getConfig(), tablearc.getTable(), tablearc.getLargeur(),  tablearc.getHauteur(), empreinte, cleartxt);
     }
